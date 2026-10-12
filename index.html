@@ -110,6 +110,16 @@ tfoot td{font-weight:700;border-top:2px solid var(--line-strong);border-bottom:0
 #toast{position:fixed;inset-inline:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));max-width:520px;margin:0 auto;z-index:1000;background:var(--brand);color:#fff;border-radius:12px;padding:14px 16px;font-size:13.5px;line-height:1.8;box-shadow:0 12px 30px rgba(0,0,0,.25)}
 #toast button{font:inherit;font-family:var(--font-d);font-weight:700;background:var(--gold-soft);color:var(--brand);border:0;border-radius:999px;padding:5px 14px;margin-top:8px;cursor:pointer}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.flist{margin:10px 0 0;padding-inline-start:20px;font-size:13.5px;line-height:1.95;color:var(--ink-2)}
+.flist li{margin-bottom:6px}
+.fsec td{font-family:var(--font-d);font-weight:700;background:var(--surface-2);color:var(--ink)}
+.fsub td{font-weight:700;color:var(--ink)}
+.fsub.big td{border-top:2px solid var(--line-strong)}
+.fpct td{color:var(--muted);font-size:12px}
+td.fselc,th.fselc{background:rgba(176,143,92,.11)}
+.fdet{margin-top:14px}
+.fdet summary{cursor:pointer;font-size:13.5px;color:var(--ink-2);font-family:var(--font-d);font-weight:600;padding:6px 0}
+.ltr{direction:ltr;display:inline-block}
 </style>
 
 <div class="wrap">
@@ -134,6 +144,7 @@ tfoot td{font-weight:700;border-top:2px solid var(--line-strong);border-bottom:0
   <div class="tabs" role="tablist">
     <button class="tab" id="t-target" role="tab" aria-selected="true" aria-controls="p-target">التارقت اليومي</button>
     <button class="tab" id="t-perf" role="tab" aria-selected="false" aria-controls="p-perf">أداء الفروع</button>
+    <button class="tab" id="t-fin" role="tab" aria-selected="false" aria-controls="p-fin">الأداء المالي</button>
     <button class="tab" id="t-prod" role="tab" aria-selected="false" aria-controls="p-prod">مبيعات المنتجات</button>
     <button class="tab" id="t-week" role="tab" aria-selected="false" aria-controls="p-week">أيام الأسبوع</button>
     <button class="tab" id="t-rec" role="tab" aria-selected="false" aria-controls="p-rec">القراءة والتوصيات</button>
@@ -285,7 +296,101 @@ tfoot td{font-weight:700;border-top:2px solid var(--line-strong);border-bottom:0
     <p class="foot-note">المصدر: تقرير الفروع الشهري. صافي المبيعات = إجمالي المبيعات − الخصم − الضريبة. «عدد الزوار» في التقرير مطابق لعدد الطلبات، فلا يصلح لحساب نسبة التحويل. قد يختلف صافي المبيعات هنا قليلًا عن مجموع شيت التارقت اليومي لأن المصدرين يحسبان المرتجعات والخصم بطريقة مختلفة.</p>
   </section>
 
-  <section id="p-prod" role="tabpanel" aria-labelledby="t-prod" hidden="">
+  <section id="p-fin" role="tabpanel" aria-labelledby="t-fin" hidden>
+    <div class="card" id="f-empty" style="margin-top:0" hidden>
+      <div class="card-h"><h3>لا توجد أرقام مالية لهذا الشهر</h3></div>
+      <p style="font-size:13.5px;color:var(--ink-2);line-height:1.9;margin:10px 0 0">الأرقام المالية مضافة حاليًا لشهر سبتمبر 2026 فقط. اختر سبتمبر من قائمة الأشهر أعلى الصفحة.</p>
+    </div>
+    <div id="f-body">
+    <div class="kpis">
+      <div class="kpi lead">
+        <div class="label">الإيرادات</div>
+        <div class="val" id="f-rev">—</div>
+        <div class="foot" id="f-rev-f"></div>
+      </div>
+      <div class="kpi">
+        <div class="label">مجمل الربح</div>
+        <div class="val" id="f-gross">—</div>
+        <div class="foot" id="f-gross-f"></div>
+      </div>
+      <div class="kpi">
+        <div class="label">صافي الربح / الخسارة</div>
+        <div class="val" id="f-net">—</div>
+        <div class="foot" id="f-net-f"></div>
+      </div>
+      <div class="kpi">
+        <div class="label">نسبة تكلفة البضاعة</div>
+        <div class="val" id="f-cogs">—</div>
+        <div class="foot" id="f-cogs-f"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><h3>من الإيراد إلى صافي الربح</h3><span class="note" id="f-wf-note"></span></div>
+      <div class="chart" id="c-fwf"></div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-h"><h3>صافي الربح حسب الفرع</h3><span class="note">قبل الفوائد والزكاة</span></div>
+        <div class="chart" id="c-fnet"></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h3>أكبر بنود المصاريف التشغيلية</h3><span class="note" id="f-opx-note"></span></div>
+        <div class="chart" id="c-fopx"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><h3>قائمة الدخل</h3><span class="note" id="f-pl-note"></span></div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>البند</th><th>فرع الخبر</th><th>فرع الدمام</th><th>كاترينج</th><th>الإجمالي</th></tr></thead>
+          <tbody id="f-pl"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><h3>المقبوضات والمدفوعات النقدية</h3><span class="note">على مستوى الشركة · لا يتغير باختيار الفرع</span></div>
+      <div class="mets" id="f-cash"></div>
+      <div id="f-cash-read" style="font-size:13.5px;line-height:1.9;color:var(--ink-2);margin-top:12px"></div>
+      <h3 style="font-size:14px;margin-top:16px">المدفوعات حسب المجموعة</h3>
+      <div class="chart" id="c-fcash"></div>
+      <details class="fdet">
+        <summary>كل بنود المدفوعات</summary>
+        <div class="tablewrap">
+          <table><thead><tr><th>البند</th><th>المجموعة</th><th>المبلغ</th></tr></thead>
+          <tbody id="f-cash-tb"></tbody></table>
+        </div>
+      </details>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><h3>تكاليف تأسيس فرع الدمام</h3><span class="note" id="f-cap-note"></span></div>
+      <div class="mets" id="f-cap"></div>
+      <div class="tablewrap">
+        <table><thead><tr><th>البند</th><th>الحساب</th><th>المبلغ</th></tr></thead>
+        <tbody id="f-cap-tb"></tbody></table>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-h"><h3>ملاحظات المحاسب</h3><span class="note">كما وردت في قائمة الدخل</span></div>
+        <ul class="flist" id="f-notes"></ul>
+      </div>
+      <div class="card">
+        <div class="card-h"><h3>ملاحظات على الأرقام</h3><span class="note">تحتاج تأكيد من المحاسب</span></div>
+        <ul class="flist" id="f-checks"></ul>
+      </div>
+    </div>
+    <p class="foot-note" id="f-src"></p>
+    </div>
+  </section>
+
+  
+<section id="p-prod" role="tabpanel" aria-labelledby="t-prod" hidden="">
     <div class="kpis">
       <div class="kpi lead">
         <div class="label">مبيعات المنتجات</div>
@@ -525,15 +630,18 @@ tfoot td{font-weight:700;border-top:2px solid var(--line-strong);border-bottom:0
 
   <div class="warnbar">
     <span class="mark" aria-hidden="true">!</span>
-    <span><b>ملف خاص بمبيعات وكاد.</b> أرسل الملف والرمز في رسالتين منفصلتين، ولا تتركه على جهاز مشترك.</span>
+    <span><b>ملف خاص بمبيعات وكاد وأرقامها المالية.</b> أرسل الملف والرمز في رسالتين منفصلتين، ولا تتركه على جهاز مشترك.</span>
   </div>
 </div>
 
+<script id="fin-seed" type="application/json">{"2026-09":{"tot":{"rev":{"kh":362575.78,"dm":272344.87,"cat":36891.74},"dir":{"kh":152366.47,"dm":148764.11,"cat":13667.9},"gross":{"kh":210209.31,"dm":123580.76,"cat":23223.84},"opx":{"kh":162664.83,"dm":369438.92,"cat":810.0},"net":{"kh":47544.48,"dm":-245858.16,"cat":22413.84}},"src":"قائمة الدخل وبيان المقبوضات والمدفوعات (إقفال سبتمبر 2026) وبيان تكاليف فرع الدمام","pl":[{"s":"rev","n":"إيرادات المبيعات / الخدمات","c":"4101","kh":362575.78,"dm":272344.87,"cat":36891.74},{"s":"dir","n":"تكلفة البضاعة المباعة","c":"5101","kh":114292.26,"dm":109337.77,"cat":11358.59},{"s":"dir","n":"رواتب وأجور تشغيلية","c":"5102","kh":38073.89,"dm":39425.94,"cat":2309.0},{"s":"opx","n":"الرواتب والرسوم الإدارية","c":"5201","kh":21019.94,"dm":21019.94,"cat":0},{"s":"opx","n":"مصروف إهلاك","c":"","kh":31645,"dm":4962,"cat":0},{"s":"opx","n":"تأمين طبي ومصاريف طبية","c":"5202","kh":1975,"dm":1975,"cat":0},{"s":"opx","n":"مصاريف تسويقية ودعائية","c":"5203","kh":37750.36,"dm":81178.93,"cat":0},{"s":"opx","n":"مصاريف الإيجار","c":"5204","kh":24855.05,"dm":8666.66,"cat":0},{"s":"opx","n":"التأمينات الاجتماعية","c":"5207","kh":969.27,"dm":969.27,"cat":0},{"s":"opx","n":"الرسوم الحكومية","c":"5208","kh":1600,"dm":3872.5,"cat":0},{"s":"opx","n":"رسوم واشتراكات","c":"5209","kh":812.28,"dm":714.28,"cat":260},{"s":"opx","n":"كهرباء","c":"5210","kh":4979.02,"dm":1589.06,"cat":0},{"s":"opx","n":"مصاريف مكتبية ومطبوعات","c":"5211","kh":0,"dm":497,"cat":0},{"s":"opx","n":"مصاريف ضيافة","c":"5212","kh":195,"dm":59,"cat":0},{"s":"opx","n":"رسوم وعمولات بنكية","c":"5213","kh":6183.72,"dm":4627.97,"cat":0},{"s":"opx","n":"نت وجوال","c":"5217","kh":350,"dm":260,"cat":0},{"s":"opx","n":"مصروف إقامات وكروت عمل","c":"5218","kh":9500,"dm":9500,"cat":0},{"s":"opx","n":"مصروف نقل ومواصلات","c":"5219","kh":301,"dm":4802.2,"cat":550},{"s":"opx","n":"مخالفات وغرامات","c":"5220","kh":2000,"dm":0,"cat":0},{"s":"opx","n":"صيانة عامة","c":"5221","kh":150,"dm":2620,"cat":0},{"s":"opx","n":"مستلزمات تشغيلية","c":"5222","kh":335.81,"dm":12646.68,"cat":0},{"s":"opx","n":"خدمات عامة","c":"5223","kh":0,"dm":4300,"cat":0},{"s":"opx","n":"ملابس","c":"5226","kh":0,"dm":1267.95,"cat":0},{"s":"opx","n":"مصاريف تطبيقات التوصيل","c":"5227","kh":8096.99,"dm":4636.64,"cat":0},{"s":"opx","n":"مصروف نهاية الخدمة","c":"5228","kh":2082.29,"dm":2641.25,"cat":0},{"s":"opx","n":"مصاريف نظافة","c":"5230","kh":1500,"dm":2500,"cat":0},{"s":"opx","n":"محروقات","c":"5231","kh":0,"dm":130.62,"cat":0},{"s":"opx","n":"مصاريف إجازة سنوية","c":"5232","kh":3514,"dm":4001.67,"cat":0},{"s":"opx","n":"مصاريف متابعة جودة","c":"5235","kh":2850,"dm":0,"cat":0},{"s":"opx","n":"مصروف خلو قدم","c":"5238","kh":0,"dm":190000,"cat":0,"x":1}],"cash":{"open":485516.88,"in":[["تحصيلات إيرادات",668256.91],["تحصيلات نقدية",34493.1]],"out":[{"n":"أصول (آلات ومعدات وإنشاءات)","v":94759.92,"g":"ast"},{"n":"خلو","v":40000,"g":"ast"},{"n":"مشتريات","v":252493.71,"g":"pur"},{"n":"رواتب وأجور","v":89185.27,"g":"sal"},{"n":"تمويل بالية (شركات شقيقة) + فاتورة تنظيف","v":32591.5,"g":"sis"},{"n":"سلفة شركات شقيقة (شركة ونا)","v":44034.08,"g":"sis"},{"n":"سلفة شركات شقيقة (شركة مشاري)","v":80000,"g":"sis"},{"n":"مخالفات","v":2000,"g":"oth"},{"n":"عهدة متبقية","v":850,"g":"oth"},{"n":"رسوم حكومية","v":1840,"g":"oth"},{"n":"كهرباء","v":6985.01,"g":"oth"},{"n":"رسوم واشتراكات","v":5311.02,"g":"oth"},{"n":"رسوم بنكية","v":4406.53,"g":"oth"},{"n":"إقامات وكروت عمل","v":10352,"g":"oth"},{"n":"تأمينات اجتماعية","v":1707.5,"g":"oth"},{"n":"مصاريف تسويقية","v":79739.38,"g":"mkt"},{"n":"مستلزمات تشغيلية","v":5742.29,"g":"oth"},{"n":"نقل","v":900,"g":"oth"},{"n":"نظافة","v":4225,"g":"oth"},{"n":"ملابس","v":138,"g":"oth"},{"n":"نت وجوال","v":701.5,"g":"oth"},{"n":"مصاريف طبية","v":5429.04,"g":"oth"},{"n":"خدمامات","v":2000,"g":"oth"},{"n":"رواتب كاش","v":24953,"g":"sal"},{"n":"سداد ونا كاش","v":5710,"g":"sis"},{"n":"سلفة شركات شقيقة (شركة مشاري) كاش","v":14268,"g":"sis"},{"n":"مصاريف تسويق (كاش)","v":7000,"g":"mkt"},{"n":"عهدة فرع الدمام","v":1000,"g":"oth"},{"n":"انتقالات","v":301,"g":"oth"},{"n":"مشتريات (كاش)","v":671,"g":"pur"},{"n":"صيانة (كاش)","v":170,"g":"oth"},{"n":"أدوات مكتبية (كاش)","v":497,"g":"oth"},{"n":"أجهزة كهربائية","v":1109.5,"g":"ast"},{"n":"مصاريف تسويق (عهدة)","v":6004.79,"g":"mkt"},{"n":"رسوم واشتراكات (عهدة)","v":299,"g":"oth"},{"n":"أجور نقل من العهدة","v":463.25,"g":"oth"},{"n":"ضيافة مكتب (عهدة)","v":59,"g":"oth"},{"n":"صيانة (عهدة)","v":2720,"g":"oth"},{"n":"مشتريات (عهدة)","v":1605.39,"g":"pur"},{"n":"تكاليف إصدار شهادات صحية (عهدة)","v":4452.5,"g":"oth"},{"n":"أجور عمالة مستأجرة (عهدة)","v":1650,"g":"sal"},{"n":"مستلزمات تشغيلية (عهدة)","v":5342.42,"g":"oth"}],"close":344599.29,"top5Stated":509030.4},"capex":{"total_stated":442980.93,"cats":[{"n":"مقاولات وتحسينات على أصول مستأجرة","acc":"120102","stated":181155.65,"items":[["تصاميم فرع الدمام",21000],["مؤسسة الأسقف الشرقية للمقاولات: إنارة بوكس الألمنيوم",3000],["بوكس ألمنيوم لإضاءة البار (ضياء)",4112],["تجليد خشبي",22275],["مقاولات طلاء وأرضيات",30368.65],["لوحات (ضياء): تصنيع وتوريد",14400],["أعمال مقاولات وتكسير",86000]]},{"n":"آلات ومعدات","acc":"120103","stated":193324.0,"items":[["أوركيدا أغري للمبيدات: مصايد وستائر هواء",1482.61],["آلات ومعدات قهوة ومستلزمات بار كاملة",160532.3],["أعمال ستيل وطاولات",31310]]},{"n":"أجهزة طابعة وكاميرات","acc":"","stated":11509.28,"items":[]},{"n":"أثاث","acc":"120106","stated":56992.0,"items":[["كراسي خارجية (52 كرسي)",6760],["الذرب دعاية الفرع (فنجان)",695.66],["ستائر وتنجيد وتشجير",9065],["أثاث وكراسي",40472],["كراسي ستيل (8) — بدون مبلغ في البيان",null]]}]},"notes":["ارتفاع مصاريف التسويق مقارنة برقم المبيعات.","ضرورة ألا تنزل المبيعات في الفترة القادمة عن 450 ألف لكل فرع.","ارتفاع خسارة فرع الدمام في شهره الأول بسبب تحميل 190,000 من خلو القدم، وهو ما دُفع حتى الآن.","اختلافات في تكلفة البضاعة المباعة يجب السيطرة عليها بوجود مدير تشغيل ومسؤول مخازن ومسؤول مشتريات.","ارتفاع الرواتب والأجور التشغيلية، ويجري العمل على تقليل عدد العمالة."]}}</script>
 <script>
 /* نسخة مصدر الصفحة كما هي قبل أي تعديل، لتوليد نسخة المشاركة */
 const SRC='<!doctype html>\n'+document.documentElement.outerHTML;
 const BLOB="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";
 const STORE_KEY='wakad_sales_v1';
+const FIN_SEED=(()=>{try{const e=document.getElementById('fin-seed');return e?JSON.parse(e.textContent):null;}catch(e){return null;}})();
+let FIN=null;
 
 let T_KH=[],T_DM=[],S_KH=[],S_DM=[];
 let N=30, DAYS=Array.from({length:N},(_,i)=>i+1);
@@ -937,12 +1045,165 @@ function drawProducts(){
       <td>${p.qty?nf1.format(p.sales/p.qty):'—'}</td><td>${(p.sales/tot*100).toFixed(1)}%</td><td>${(p.qty/totQ*100).toFixed(1)}%</td></tr>`).join(''));
 }
 
+
+/* ================= الأداء المالي ================= */
+const FB={kh:'فرع الخبر',dm:'فرع الدمام',cat:'كاترينج'};
+const FG={pur:'مشتريات',sal:'رواتب وأجور',sis:'شركات شقيقة',ast:'أصول وخلو',mkt:'تسويق',oth:'مصاريف أخرى'};
+const fCols=()=>branch==='all'?['kh','dm','cat']:[branch];
+const fv=o=>fCols().reduce((a,k)=>a+(+o[k]||0),0);
+const sg=v=>`<bdi dir="ltr">${v<0?'−':''}${money(Math.abs(v))}</bdi>`;
+const sg2=v=>Math.abs(v)<0.005?'<span style="color:var(--muted)">—</span>':`<bdi dir="ltr">${v<0?'−':''}${nf1.format(Math.abs(v))}</bdi>`;
+
+function vbars(hostId,items,o){
+  /* items: [{n,v,kind:'total'|'delta'|'bar',c}] — يُرسم من اليمين لليسار */
+  const host=document.getElementById(hostId);host.innerHTML='';
+  const Wx=Math.max(330,host.clientWidth||760),nar=Wx<560,Hx=300,pl=nar?44:62,pr=nar?6:14,pt=24,pb=44;
+  const iw=Wx-pl-pr, ih=Hx-pt-pb;
+  const svg=el('svg',{viewBox:`0 0 ${Wx} ${Hx}`,role:'img'});host.appendChild(svg);
+  let run=0;const seg=items.map(it=>{
+    let a,b;
+    if(it.kind==='delta'){a=run;b=run+it.v;run=b;}else{a=0;b=it.v;run=it.v;}
+    return {...it,a,b};
+  });
+  const lo=Math.min(0,...seg.map(s=>Math.min(s.a,s.b))), hi=Math.max(0,...seg.map(s=>Math.max(s.a,s.b)));
+  const step=niceMax((hi-lo)*1.1/5)||1;
+  const bot=Math.floor(lo/step)*step, top=Math.max(step,Math.ceil(hi*1.06/step)*step), span=top-bot;
+  const y=v=>pt+(top-v)/span*ih;
+  for(let v=bot;v<=top+1e-6;v+=step){const yy=y(v);
+    svg.appendChild(el('line',{x1:pl,x2:Wx-pr,y1:yy,y2:yy,stroke:'var(--line)','stroke-width':1}));
+    const tx=el('text',{x:pl-8,y:yy+4,'text-anchor':'end',fill:'var(--muted)','font-size':11});
+    tx.textContent=(v<-1e-6?'−':'')+(Math.abs(v)/1000).toFixed(0)+'k';svg.appendChild(tx);}
+  if(lo<0)svg.appendChild(el('line',{x1:pl,x2:Wx-pr,y1:y(0),y2:y(0),stroke:'var(--ink-2)','stroke-width':1.2}));
+  const gap=iw/seg.length, bw=Math.min(o&&o.bw||70,gap*0.58);
+  seg.forEach((s,i)=>{
+    const cx=Wx-pr-gap*(i+.5);
+    const y1=y(Math.max(s.a,s.b)), h=Math.max(2,Math.abs(y(s.a)-y(s.b)));
+    const fill=s.c||(s.kind==='delta'?(s.v<0?'var(--serious)':'var(--good)'):(s.b<0?'var(--crit)':'var(--brand)'));
+    svg.appendChild(el('rect',{x:cx-bw/2,y:y1,width:bw,height:h,rx:4,fill,'fill-opacity':s.dim?.35:1}));
+    if(i<seg.length-1&&s.kind!=='bar'){
+      const nx=Wx-pr-gap*(i+1.5);
+      svg.appendChild(el('line',{x1:cx-bw/2,x2:nx+bw/2,y1:y(s.b),y2:y(s.b),stroke:'var(--line-strong)','stroke-dasharray':'3 3'}));
+    }
+    const neg=s.kind==='delta'?s.v<0:s.b<0;
+    const vy=neg&&s.kind!=='delta'?y(Math.min(s.a,s.b))+15:y1-7;
+    const v=el('text',{x:cx,y:vy,'text-anchor':'middle',fill:neg?'var(--crit)':'var(--ink)','font-size':nar?9.5:11.5,'font-weight':600});
+    v.textContent=(s.v<0?'−':'')+(nar&&Math.abs(s.v)>=1000?(Math.abs(s.v)/1000).toFixed(0)+'k':money(Math.abs(s.v)));svg.appendChild(v);
+    const words=s.n.split(' '), mid=Math.ceil(words.length/2);
+    const lines=(nar||s.n.length>12)&&words.length>1?[words.slice(0,mid).join(' '),words.slice(mid).join(' ')]:[s.n];
+    lines.forEach((ln,j)=>{const l=el('text',{x:cx,y:Hx-24+j*14,'text-anchor':'middle',fill:'var(--ink-2)','font-size':nar?10.5:12});l.textContent=ln;svg.appendChild(l);});
+  });
+}
+
+function drawFin(){
+  const body=document.getElementById('f-body'), empty=document.getElementById('f-empty');
+  if(!FIN){body.hidden=true;empty.hidden=false;return;}
+  body.hidden=false;empty.hidden=true;
+  const T=FIN.tot, L=FIN.pl, set=(id,h)=>{const e=document.getElementById(id);if(e)e.innerHTML=h;};
+  const name=branch==='all'?'الشركة: الخبر + الدمام + كاترينج':FB[branch];
+  const rev=fv(T.rev), gross=fv(T.gross), opx=fv(T.opx), net=fv(T.net);
+  const line=c=>L.filter(l=>l.c===c).reduce((a,l)=>a+fv(l),0);
+  const cogs=line('5101'), labor=line('5102');
+  const key=L.filter(l=>l.x).reduce((a,l)=>a+fv(l),0);
+
+  set('f-rev',money(rev)+' <span class="cur">ر.س</span>');
+  set('f-rev-f',name);
+  set('f-gross',money(gross)+' <span class="cur">ر.س</span>');
+  set('f-gross-f','هامش مجمل الربح '+pct(gross/rev));
+  const fn=document.getElementById('f-net');fn.className='val'+(net<0?' neg':'');
+  set('f-net',sg(net)+' <span class="cur">ر.س</span>');
+  set('f-net-f','نسبة '+pct(net/rev)+(key?' · بدون خلو القدم: '+sg(net+key):''));
+  set('f-cogs',pct(cogs/rev));
+  set('f-cogs-f',money(cogs)+' ر.س تكلفة بضاعة');
+
+  const steps=[{n:'الإيرادات',v:rev,kind:'total'},{n:'تكلفة البضاعة',v:-cogs,kind:'delta'},
+    {n:'رواتب تشغيلية',v:-labor,kind:'delta'},{n:'مصاريف تشغيلية',v:-(opx-key),kind:'delta'}];
+  if(key)steps.push({n:'خلو القدم',v:-key,kind:'delta',c:'var(--crit)'});
+  steps.push({n:'صافي الربح',v:net,kind:'total'});
+  vbars('c-fwf',steps);
+  set('f-wf-note',name+(key?' · خلو القدم مفصول لأنه مبلغ غير متكرر':''));
+
+  vbars('c-fnet',['kh','dm','cat'].map(k=>({n:FB[k],v:T.net[k],kind:'bar',dim:branch!=='all'&&branch!==k,
+    c:T.net[k]<0?'var(--crit)':k==='kh'?'var(--s1)':k==='dm'?'var(--s2)':'var(--gold)'})),{bw:80});
+
+  const top=L.filter(l=>l.s==='opx').map(l=>({name:l.n,v:fv(l)})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v).slice(0,8);
+  hbars('c-fopx',top,p=>p.v,'var(--gold)');
+  set('f-opx-note','من '+money(opx)+' ر.س · '+name);
+
+  /* جدول قائمة الدخل */
+  const K=['kh','dm','cat'], selc=k=>branch!=='all'&&branch===k?' class="fselc"':'';
+  const tot=o=>K.reduce((a,k)=>a+(+o[k]||0),0);
+  const row=(n,o,cls)=>`<tr${cls?' class="'+cls+'"':''}><td style="text-align:right">${n}</td>${K.map(k=>`<td${selc(k)}>${sg2(+o[k]||0)}</td>`).join('')}<td>${sg2(tot(o))}</td></tr>`;
+  const prow=(n,num,den)=>`<tr class="fpct"><td style="text-align:right">${n}</td>${K.map(k=>`<td${selc(k)}>${den[k]?pct(num[k]/den[k]):'—'}</td>`).join('')}<td>${pct(tot(num)/tot(den))}</td></tr>`;
+  const sec=n=>`<tr class="fsec"><td colspan="5" style="text-align:right">${n}</td></tr>`;
+  const cogsO=L.find(l=>l.c==='5101'), mktO=L.find(l=>l.c==='5203');
+  let h=sec('الإيرادات التشغيلية');
+  L.filter(l=>l.s==='rev').forEach(l=>h+=row(l.n,l));
+  h+=sec('التكاليف المباشرة');
+  L.filter(l=>l.s==='dir').forEach(l=>h+=row(l.n,l));
+  h+=prow('نسبة تكلفة البضاعة',cogsO,T.rev);
+  h+=row('مجموع التكاليف المباشرة',T.dir,'fsub');
+  h+=row('مجمل الربح',T.gross,'fsub big');
+  h+=sec('التكاليف التشغيلية');
+  L.filter(l=>l.s==='opx').forEach(l=>{h+=row(l.n,l);if(l.c==='5203')h+=prow('نسبة التسويق من المبيعات',mktO,T.rev);});
+  h+=row('مجموع التكاليف التشغيلية',T.opx,'fsub');
+  h+=row('صافي الربح / الخسارة',T.net,'fsub big');
+  h+=prow('نسبة الربح / الخسارة',T.net,T.rev);
+  set('f-pl',h);
+  document.querySelectorAll('#p-fin thead th').forEach((th,i)=>th.classList.toggle('fselc',branch!=='all'&&K[i-1]===branch));
+  set('f-pl-note','المجاميع كما وردت في القائمة');
+
+  /* النقدية */
+  const C=FIN.cash, cin=C.in.reduce((a,x)=>a+x[1],0), cout=C.out.reduce((a,x)=>a+x.v,0);
+  const met=(l,v,s)=>`<div class="met"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`;
+  set('f-cash',
+    met('رصيد أول الشهر',money(C.open)+' ر.س','البنوك والنقدية')+
+    met('المقبوضات',money(cin)+' ر.س',C.in.map(x=>x[0]+' '+money(x[1])).join(' · '))+
+    met('المدفوعات',money(cout)+' ر.س',C.out.length+' بندًا')+
+    met('رصيد آخر الشهر',money(C.close)+' ر.س','صافي التغير '+sg(C.close-C.open)));
+  const grp={};C.out.forEach(x=>grp[x.g]=(grp[x.g]||0)+x.v);
+  const gl=Object.keys(grp).map(k=>({name:FG[k]||k,v:grp[k],k})).sort((a,b)=>b.v-a.v);
+  hbars('c-fcash',gl,p=>p.v,'var(--brand)');
+  const drop=C.open-C.close, sis=grp.sis||0;
+  set('f-cash-read',`انخفض الرصيد خلال الشهر ${money(drop)} ر.س، بينما خرج للشركات الشقيقة (سلف وتمويل وسداد) ${money(sis)} ر.س. `+
+    `المدفوعات تساوي ${pct(cout/cin)} من مقبوضات الشهر. تجميع البنود في مجموعات من عندي للتوضيح، والبنود الأصلية في القائمة أدناه.`);
+  set('f-cash-tb',C.out.slice().sort((a,b)=>b.v-a.v).map(x=>`<tr><td style="text-align:right">${x.n}</td><td style="color:var(--ink-2)">${FG[x.g]||''}</td><td>${nf1.format(x.v)}</td></tr>`).join('')+
+    `<tr class="fsub big"><td style="text-align:right">الإجمالي</td><td></td><td>${nf1.format(cout)}</td></tr>`);
+
+  /* تأسيس الدمام */
+  const P2=FIN.capex, dsum=c=>c.items.reduce((a,x)=>a+(x[1]||0),0);
+  const real=P2.cats.reduce((a,c)=>a+(c.items.length?dsum(c):c.stated),0);
+  set('f-cap',P2.cats.map(c=>met(c.n,money(c.items.length?dsum(c):c.stated)+' ر.س',
+     c.items.length?(Math.abs(dsum(c)-c.stated)>0.005?'الملخص يذكر '+nf1.format(c.stated):c.items.length+' بنود'):'بدون تفصيل في البيان')).join('')+
+     met('الإجمالي',money(real)+' ر.س','البيان يذكر '+nf1.format(P2.total_stated)));
+  set('f-cap-note','سبتمبر 2026 · لا تدخل في صافي الربح، تُهلك على سنوات');
+  let ct='';
+  P2.cats.forEach(c=>{
+    ct+=`<tr class="fsec"><td colspan="3" style="text-align:right">${c.n}</td></tr>`;
+    if(!c.items.length)ct+=`<tr><td style="text-align:right;color:var(--muted)">لا يوجد تفصيل</td><td>${c.acc||'—'}</td><td>${nf1.format(c.stated)}</td></tr>`;
+    c.items.forEach(x=>ct+=`<tr><td style="text-align:right">${x[0]}</td><td style="color:var(--muted)">${c.acc||'—'}</td><td>${x[1]==null?'<span style="color:var(--crit)">بدون مبلغ</span>':nf1.format(x[1])}</td></tr>`);
+  });
+  set('f-cap-tb',ct);
+
+  set('f-notes',FIN.notes.map(n=>`<li>${n}</li>`).join(''));
+  const t5=C.out.map(x=>x.v).sort((a,b)=>b-a).slice(0,5).reduce((a,b)=>a+b,0);
+  set('f-checks',[
+    `في قائمة الدخل، أعمدة الخبر والدمام في المصاريف التشغيلية وسطر «صافي الدخل قبل الفوائد» جاءت بعكس أعمدة الإيرادات. وُزّعت هنا بحيث تطابق سطر صافي الربح ونسبه: خسارة الدمام ${sg(T.net.dm)} = مجمل ربحه ${money(T.gross.dm)} − مصاريفه ${money(T.opx.dm)}.`,
+    `مصروف الإهلاك: الخبر ${money(L.find(l=>l.n==='مصروف إهلاك').kh)} والدمام ${money(L.find(l=>l.n==='مصروف إهلاك').dm)}. هذا التوزيع الوحيد اللي يخلي مجموع كل عمود يطابق المجموع المعلن.`,
+    'مجموع بنود التكاليف المباشرة يختلف عن المجموع المعلن بأقل من ريال لكل عمود (تقريب)، والمعروض هنا هو المعلن.',
+    `بيان تكاليف الدمام: الإجمالي المعلن ${nf1.format(P2.total_stated)}، ومجموع التفاصيل ${nf1.format(real)}. الفرق من تقريب ملخص الآلات والأثاث. بند الطابعات والكاميرات بلا تفصيل، والكراسي الستيل الثمانية بلا مبلغ.`,
+    `في بيان النقدية، الرصيد الختامي ${nf1.format(C.close)} مكتوب عليه «31/08/2026» والصحيح 30/09/2026.`,
+    `خانة «أكبر 5 بنود منصرفة» = ${nf1.format(C.top5Stated)}، بينما أكبر خمسة فعلًا مجموعها ${nf1.format(t5)}.`
+  ].map(x=>`<li>${x}</li>`).join(''));
+  set('f-src','المصدر: '+FIN.src+'. هذا القسم يعرض الأرقام كما وردت، ولا يُحدَّث من تبويب «تحديث البيانات». إيرادات قائمة الدخل قد تختلف عن مجموع شيت التارقت اليومي لاختلاف طريقة الاحتساب.');
+}
+
 /* ================= tabs ================= */
-const PANELS={'t-target':'p-target','t-perf':'p-perf','t-prod':'p-prod','t-week':'p-week','t-rec':'p-rec','t-oct':'p-oct','t-in':'p-in'};
+const PANELS={'t-target':'p-target','t-perf':'p-perf','t-fin':'p-fin','t-prod':'p-prod','t-week':'p-week','t-rec':'p-rec','t-oct':'p-oct','t-in':'p-in'};
 function redrawOpen(){
   const open=document.querySelector('.tab[aria-selected="true"]').id;
   if(open==='t-target'){renderAll();drawBranches();}
   else if(open==='t-perf')drawPerf();
+  else if(open==='t-fin')drawFin();
   else if(open==='t-prod')drawProducts();
   else if(open==='t-week')drawWeek();
   else if(open==='t-rec')drawRec();
@@ -1364,6 +1625,7 @@ function applyMonth(M){
   const ordAll=(R.kh.orders+R.dm.orders)||1;
   R.all.acc=(R.kh.acc*R.kh.orders+R.dm.acc*R.dm.orders)/ordAll;
   R.all.clo=(R.kh.clo*R.kh.orders+R.dm.clo*R.dm.orders)/ordAll;
+  FIN=M.fin||null;
   P=(M.products||[]).map(p=>({name:p.name,sales:+p.sales||0,qty:+p.qty||0}));
   KHB=baseline(S_KH,0,N-1);DMB=baseline(S_DM,0,N-1);
   labelMonths();
@@ -1403,6 +1665,7 @@ mPick.addEventListener('change',()=>{if(STORE[mPick.value]){applyMonth(STORE[mPi
 
 const msel=document.getElementById('in-m');
 msel.innerHTML=MN.map((n,i)=>`<option value="${i+1}"${i+1===10?' selected':''}>${n}</option>`).join('');
+function keepFin(M){const o=STORE[key(M.y,M.m)];if(o&&o.fin&&!M.fin)M.fin=o.fin;}
 function readForm(){
   return buildMonth(+document.getElementById('in-y').value,+msel.value,{
     daily:document.getElementById('in-daily').value,
@@ -1422,7 +1685,7 @@ function markStatus(M){
 }
 const isEmpty=M=>!['tKh','tDm','sKh','sDm'].some(k=>M[k].some(v=>v))&&!M.branches.kh&&!M.branches.dm&&!M.products.length;
 document.getElementById('btn-prev').addEventListener('click',()=>{
-  const M=readForm();markStatus(M);
+  const M=readForm();keepFin(M);markStatus(M);
   document.getElementById('in-report').innerHTML=monthReport(M);
   const mg=document.getElementById('save-msg');
   if(isEmpty(M)){mg.textContent='لم يُقرأ أي شيء من الصناديق.';mg.style.color='var(--crit)';return;}
@@ -1430,7 +1693,7 @@ document.getElementById('btn-prev').addEventListener('click',()=>{
   applyMonth(M);
 });
 document.getElementById('btn-save').addEventListener('click',async()=>{
-  const M=readForm();markStatus(M);
+  const M=readForm();keepFin(M);markStatus(M);
   document.getElementById('in-report').innerHTML=monthReport(M);
   const msg=document.getElementById('save-msg');
   if(isEmpty(M)){msg.textContent='لم يُقرأ أي شيء — الصق التقارير أولًا.';msg.style.color='var(--crit)';return;}
@@ -1477,11 +1740,40 @@ function loadStore(months){
 }
 /* وضع العرض: ملف مشاركة جاهز */
 async function unlock(pw){
-  let months=null;
+  let months=null, blobMonths=null;
   const local=(()=>{try{return localStorage.getItem(STORE_KEY);}catch(e){return null;}})();
   if(local){try{const r=await decryptBlob(local,pw);KEY=r.key;LOCAL_SALT=r.salt;months=r.data.months;}catch(e){}}
-  if(!months){const r=await decryptBlob(BLOB,pw);KEY=r.key;LOCAL_SALT=r.salt;months=r.data.months;}
+  try{const r=await decryptBlob(BLOB,pw);blobMonths=r.data.months;if(!months){KEY=r.key;LOCAL_SALT=r.salt;months=blobMonths;}}
+  catch(e){if(!months)throw e;}
+  /* النسخة المحلية تُكمَّل من الملف: أشهر ناقصة أو أرقام مالية ناقصة */
+  if(blobMonths&&months!==blobMonths)Object.keys(blobMonths).forEach(k=>{
+    if(!months[k])months[k]=blobMonths[k];
+    else if(!months[k].fin&&blobMonths[k].fin)months[k].fin=blobMonths[k].fin;
+  });
+  const seeded=[];
+  if(FIN_SEED)Object.keys(FIN_SEED).forEach(k=>{if(months[k]){months[k].fin=FIN_SEED[k];seeded.push(k);}});
   loadStore(months);
+  if(FIN_SEED&&!seeded.length){toast('ما لقيت شهر سبتمبر 2026 داخل الملف، فما انضافت الأرقام المالية. تأكد إنه الملف الصحيح.');return;}
+  if(seeded.length){
+    await persist();
+    try{const url=await bakeFile();
+      toast('انضافت الأرقام المالية وتشفّرت بنفس رمز الفتح. نزل الملف النهائي باسم <b>wakad-dashboard.html</b>، وهو اللي تحفظه وترسله. '+
+        'احذف الملف الحالي، لأن أرقامه المالية مكتوبة فيه بدون تشفير. <a href="'+url+'" download="wakad-dashboard.html" style="color:var(--gold-soft)">نزّله مرة ثانية</a> إذا ما بدأ التنزيل.');
+    }catch(e){toast('الأرقام المالية ظاهرة الآن ومحفوظة على هذا الجهاز، لكن تعذّر تنزيل الملف النهائي في هذا المتصفح. افتح الملف من Chrome أو Safari على الكمبيوتر.');}
+  }
+}
+/* يبني الملف النهائي: نفس الصفحة، والبيانات كلها داخل الجزء المشفّر، وبدون نسخة الأرقام المكشوفة */
+async function bakeFile(){
+  const blob=await encryptStore();
+  if(!blob)throw new Error('build');
+  const reB=/const BLOB="[A-Za-z0-9+\/=]*";/, reS=/<script id="fin-seed" type="application\/json">[\s\S]*?<\/script>/;
+  if(!reB.test(SRC)||!reS.test(SRC))throw new Error('build');
+  const html=SRC.replace(reB,()=>'const BLOB="'+blob+'";').replace(reS,()=>'<script id="fin-seed" type="application/json">null<'+'/script>');
+  const url=URL.createObjectURL(new Blob([html],{type:'text/html'}));
+  const a=document.createElement('a');a.href=url;a.download='wakad-dashboard.html';
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),120000);
+  return url;
 }
 /* وضع التجهيز: يقرأ الملف الأصلي وينتج نسخة نظيفة */
 async function prepare(file,oldPw,newPw){
@@ -1551,7 +1843,7 @@ function toast(html){
      '</div>'+
      '<button id="pwgo" type="button"><span class="lbl">جهّز النسخة</span></button>'
    :
-     '<h2>داشبورد مبيعات قهوة وكاد</h2>'+
+     '<h2>داشبورد مبيعات وأداء قهوة وكاد</h2>'+
      '<p>هذا الملف مشفّر. أدخل رمز الفتح للمتابعة.</p>'+
      '<div id="lswrap"><input id="pw" type="password" autocomplete="current-password" placeholder="رمز الفتح" style="'+inputCss+';letter-spacing:.14em"></div>'+
      '<button id="pwgo" type="button"><span class="lbl">فتح</span></button>'
